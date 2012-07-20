@@ -3,7 +3,7 @@ import time
 
 from tornado import ioloop
 
-from connection import MuninNodeClient
+from connection import MuninNodeClient, GraphitePlaintextClient
 
 
 if __name__ == "__main__":
@@ -13,10 +13,12 @@ if __name__ == "__main__":
 
     def result_callback(node, stream, data):
         now = int(time.time())
-        with open(filename, "a+") as fd:
-            data = data.strip()
-            data = data.replace("\n", " {0}\n{1}.".format(now, node)) + " {0}".format(now)
-            fd.write(data.strip())
+        data = data.strip()
+        data = data.replace("\n", " {0}\ny{1}.".format(now, node)) + " {0}".format(now)
+        data = data.strip()
+        # with open(filename, "a+") as fd:
+        #     fd.write(data.strip())
+        GraphitePlaintextClient.send_data(data, host="srv00187.edelight.net")
 
     def cbk(node, client, data):
         metrics = data.strip().split()

@@ -20,7 +20,8 @@ def fetch_data(callback, metrics, buff, stream, data):
 
         def cbk(sr, da):
             x = da.strip(".\n ")
-            x = x.replace(".value", "")
+            x = metric + "." + x.replace(".value", "")
+            x = x.replace("\n", "\n" + metric + ".")
             if x == "# Unknown service":
                 b = buff
             else:
@@ -30,7 +31,8 @@ def fetch_data(callback, metrics, buff, stream, data):
 
         def cbk(sr, da):
             x = da.strip(".\n ")
-            x = x.replace(".value", "")
+            x = metric + "." + x.replace(".value", "")
+            x = x.replace("\n", "\n" + metric + ".")
             if x == "# Unknown service":
                 b = buff
             else:
@@ -98,3 +100,33 @@ class MuninNodeClient(iostream.IOStream):
             raise NotImplementedError
         else:
             self.open(lambda s, d: fetch_data(callback, metrics, "", s, d))
+
+
+class GraphitePlaintextClient(iostream.IOStream):
+
+    @classmethod
+    def send_data(cls, data, host="127.0.0.1", port=2003):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+        client = cls(s, host, port)
+        client.open(data)
+
+    def __init__(self, sock, host="127.0.0.1", port=2003):
+        self.host = host
+        self.port = port
+        super(GraphitePlaintextClient, self).__init__(sock)
+
+    def open(self, data):
+        self.connect((self.host, self.port), lambda: self.on_connected(data))
+
+    def on_connected(self, data):
+        self.write("{0}\n".format(data.strip()))
+        #self.close()
+        #ioloop.IOLoop.instance().stop()
+
+
+if __name__ == "__main__":
+    from tornado import ioloop
+
+    g = GraphitePlaintextClient.send_data("x.y.z 55 234523423", "srv00187.edelight.net")
+
+    ioloop.IOLoop.instance().start()
