@@ -49,27 +49,18 @@ class MuninNodeClient(iostream.IOStream):
     def list_nodes(cls, callback=None, host="127.0.0.1", port=4949):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
         client = cls(s, host, port)
-
-        if callback is None:
-            callback = default_callback
         client.get_nodes(callback)
 
     @classmethod
     def list_metrics(cls, callback=None, host="127.0.0.1", port=4949):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
         client = cls(s, host, port)
-
-        if callback is None:
-            callback = default_callback
         client.get_metrics(callback)
 
     @classmethod
     def fetch_data(cls, metrics=None, callback=None, host="127.0.0.1", port=4949):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
         client = cls(s, host, port)
-
-        if callback is None:
-            callback = default_callback
         client.get_data(callback, metrics)
 
     def __init__(self, sock, host="127.0.0.1", port=4949):
@@ -113,6 +104,7 @@ class GraphitePlaintextClient(iostream.IOStream):
     def __init__(self, sock, host="127.0.0.1", port=2003):
         self.host = host
         self.port = port
+        self.set_close_callback(self.on_closed)
         super(GraphitePlaintextClient, self).__init__(sock)
 
     def open(self, data):
@@ -120,13 +112,14 @@ class GraphitePlaintextClient(iostream.IOStream):
 
     def on_connected(self, data):
         self.write("{0}\n".format(data.strip()))
-        #self.close()
-        #ioloop.IOLoop.instance().stop()
+
+    def on_closed(self, *args, **kwargs):
+        print "closed", args, kwargs
 
 
 if __name__ == "__main__":
     from tornado import ioloop
 
-    g = GraphitePlaintextClient.send_data("x.y.z 55 234523423", "srv00187.edelight.net")
+    g = GraphitePlaintextClient.send_data("x.y.z 55 234523423", "127.0.0.1")
 
     ioloop.IOLoop.instance().start()
