@@ -14,7 +14,7 @@ if __name__ == "__main__":
     def result_callback(node, stream, data):
         now = int(time.time())
         data = data.strip()
-        data = data.replace("\n", " {0}\ny{1}.".format(now, node)) + " {0}".format(now)
+        data = data.replace("\n", " {0}\n{1}.".format(now, node)) + " {0}".format(now)
         data = data.strip()
         GraphitePlaintextClient.send_data(data, host=graphite_node)
 
